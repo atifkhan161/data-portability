@@ -4,7 +4,7 @@
 #
 # Usage: ./config/gcp/build_jar.sh <binary> <env>
 # - binary is required and specifies which server to build.
-#     This should be one of: api, worker, core
+#     This should be one of: api, worker, core, gateway
 #     ex: api will build the portability-api binary
 # - env is the environment you would like to build in. This should correspond to an environment dir
 #     in config/environments. Settings for this environment are copied into the binary.
@@ -29,6 +29,9 @@ fi
 BINARY=$1
 ENV=$2
 SRC_DIR="portability-$BINARY"
+if [[ $BINARY == "api" ]]; then
+  SRC_DIR="portability-gateway"
+fi
 DEBUG_PORT=5005
 if [[ $BINARY == "worker" ]]; then
   DEBUG_PORT=5006
