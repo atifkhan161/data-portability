@@ -20,7 +20,7 @@ version = '1.0-SNAPSHOT'
 jar {
     // TODO: consider fatjar plugin
     // Add dependencies
-    from ({
+    from({
         (configurations.runtime).collect {
             it.isDirectory() ? it : zipTree(it)
         }
@@ -37,11 +37,13 @@ jar {
 
 dependencies {
     compile project(':portability-spi-cloud')
-    compile ("com.google.guava:guava:${guavaVersion}")
-    compile ("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
-    compile ("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
-    compile ("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
-    compile ("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-    compile ("org.slf4j:slf4j-api:${slf4jVersion}")
-    compile ("org.slf4j:slf4j-log4j12:${slf4jVersion}")
+    compile("com.google.guava:guava:${guavaVersion}")
+    compile("com.google.inject.extensions:guice-multibindings:${guiceVersion}")
+    compile("com.google.inject:guice:${guiceVersion}")
+    compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
+    compile("org.slf4j:slf4j-api:${slf4jVersion}")
+    compile("org.slf4j:slf4j-log4j12:${slf4jVersion}")
 }
