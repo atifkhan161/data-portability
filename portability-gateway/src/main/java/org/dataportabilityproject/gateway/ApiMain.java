@@ -1,25 +1,38 @@
+/*
+* Copyright 2018 The Data-Portability Project Authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* https://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.dataportabilityproject.gateway;
 
-import org.dataportabilityproject.gateway.PortabilityApiFlags;
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.sun.net.httpserver.HttpHandler;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import java.lang.Thread.UncaughtExceptionHandler;
+import org.dataportabilityproject.gateway.reference.ApiModule;
+import org.dataportabilityproject.gateway.reference.ApiServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * Starts the reference api server.
+ * Starts the api server.
  */
 public class ApiMain {
-
   private static final Logger logger = LoggerFactory.getLogger(ApiMain.class);
 
   /**
-   * Starts the reference api server.
+   * Starts the api server, currently the reference implementation.
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     logger.warn("Starting reference api server.");
     Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
       @Override
@@ -28,31 +41,10 @@ public class ApiMain {
       }
     });
     PortabilityApiFlags.parse();
-    throw new UnsupportedOperationException("Implement me!");
-  }
 
-  static class Module extends AbstractModule {
-    @Override
-    protected void configure() {
-      MapBinder<String, HttpHandler> mapbinder
-          = MapBinder.newMapBinder(binder(), String.class, HttpHandler.class);
-
-      // HttpServer does exact longest matching prefix for context matching. This means
-      // /_/listServices, /_/listServicesthisshouldnotwork and /_/listServices/path/to/resource will
-      // all be handled by the ListServicesHandler below. To prevent this, each handler below should
-      // validate the request URI that it is getting passed in.
-
-      /*
-      mapbinder.addBinding(CopySetupHandler.PATH).to(CopySetupHandler.class);
-      mapbinder.addBinding(DataTransferHandler.PATH).to(DataTransferHandler.class);
-      mapbinder.addBinding(ImportSetupHandler.PATH).to(ImportSetupHandler.class);
-      mapbinder.addBinding(ListDataTypesHandler.PATH).to(ListDataTypesHandler.class);
-      mapbinder.addBinding(ListServicesHandler.PATH).to(ListServicesHandler.class);
-      mapbinder.addBinding(SimpleLoginSubmitHandler.PATH).to(SimpleLoginSubmitHandler.class);
-      mapbinder.addBinding(StartCopyHandler.PATH).to(StartCopyHandler.class);
-      mapbinder.addBinding(OauthCallbackHandler.PATH).to(OauthCallbackHandler.class);
-      mapbinder.addBinding(Oauth2CallbackHandler.PATH).to(Oauth2CallbackHandler.class);
-      */
-    }
+    // TODO: Support other server implementations
+    Injector injector = Guice.createInjector(new ApiModule());
+    ApiServer apiServer = injector.getInstance(ApiServer.class);
+    apiServer.start();
   }
 }

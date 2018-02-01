@@ -37,6 +37,7 @@ jar {
 
 dependencies {
     compile project(':portability-spi-cloud')
+    compile project(':portability-types-client')
     compile("com.google.guava:guava:${guavaVersion}")
     compile("com.google.inject.extensions:guice-multibindings:${guiceVersion}")
     compile("com.google.inject:guice:${guiceVersion}")

@@ -29,6 +29,9 @@ fi
 BINARY=$1
 ENV=$2
 SRC_DIR="portability-$BINARY"
+if [[ $BINARY == "api" ]]; then
+  SRC_DIR="portability-gateway"
+fi
 DEBUG_PORT=5005
 if [[ $BINARY == "worker" ]]; then
   DEBUG_PORT=5006
