@@ -25,14 +25,16 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import javax.inject.Named;
+import org.dataportabilityproject.gateway.Launcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Bindings the reference api server.
  */
-public class ApiModule extends AbstractModule {
-  private static final Logger logger = LoggerFactory.getLogger(ApiModule.class);
+public class ReferenceApiModule extends AbstractModule {
+
+  private static final Logger logger = LoggerFactory.getLogger(ReferenceApiModule.class);
 
   @Provides
   @Named("httpPort")
@@ -58,7 +60,7 @@ public class ApiModule extends AbstractModule {
 
   @Provides
   public UncaughtExceptionHandler uncaughtExceptionHandler() {
-    return new UncaughtExceptionHandler(){
+    return new UncaughtExceptionHandler() {
       @Override
       public void uncaughtException(Thread thread, Throwable t) {
         logger.warn("Uncaught exception in thread: {}", thread.getName(), t);
@@ -68,6 +70,8 @@ public class ApiModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(Launcher.class).to(ReferenceApiLauncher.class);
+
     MapBinder<String, HttpHandler> mapbinder
         = MapBinder.newMapBinder(binder(), String.class, HttpHandler.class);
 
@@ -75,10 +79,10 @@ public class ApiModule extends AbstractModule {
     // /_/listServices, /_/listServicesthisshouldnotwork and /_/listServices/path/to/resource will
     // all be handled by the ListServicesHandler below. To prevent this, each handler below should
     // validate the request URI that it is getting passed in.
+    mapbinder.addBinding(DataTransferHandler.PATH).to(DataTransferHandler.class);
 
       /*
       mapbinder.addBinding(CopySetupHandler.PATH).to(CopySetupHandler.class);
-      mapbinder.addBinding(DataTransferHandler.PATH).to(DataTransferHandler.class);
       mapbinder.addBinding(ImportSetupHandler.PATH).to(ImportSetupHandler.class);
       mapbinder.addBinding(ListDataTypesHandler.PATH).to(ListDataTypesHandler.class);
       mapbinder.addBinding(ListServicesHandler.PATH).to(ListServicesHandler.class);

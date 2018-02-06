@@ -24,17 +24,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 import javax.inject.Named;
+import javax.inject.Singleton;
+import org.dataportabilityproject.gateway.Launcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Server that handles requests to API/web server using the Sun HttpServer framework. */
-public final class ApiServer {
-  private final Logger logger = LoggerFactory.getLogger(ApiServer.class);
+@Singleton
+public final class ReferenceApiLauncher implements Launcher {
+  private final Logger logger = LoggerFactory.getLogger(ReferenceApiLauncher.class);
   private final int port;
   private final HttpServer server;
 
   @Inject
-  ApiServer(Map<String, HttpHandler> handlers,
+  ReferenceApiLauncher(Map<String, HttpHandler> handlers,
       @Named("httpPort") int port,
       @Named("defaultView") String defaultView,
       @Named("httpExecutor") Executor httpExecutor) throws IOException {
@@ -46,6 +49,7 @@ public final class ApiServer {
     setExecutor(httpExecutor);
   }
 
+  @Override
   public void start() throws IOException {
     server.start();
     logger.info("Server is listening on port {}", port);

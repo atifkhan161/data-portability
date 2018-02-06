@@ -33,7 +33,7 @@ import org.dataportabilityproject.cloud.interfaces.CloudFactory;
 import org.dataportabilityproject.job.JobUtils;
 import org.dataportabilityproject.shared.Config.Environment;
 import org.dataportabilityproject.shared.PortableDataType;
-import org.dataportabilityproject.shared.ServiceMode;
+import org.dataportabilityproject.spi.transfer.TransferMode;
 import org.dataportabilityproject.spi.cloud.storage.JobStore;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob.JobState;
@@ -126,14 +126,14 @@ final class Oauth2CallbackHandler implements HttpHandler {
       Preconditions.checkNotNull(job, "existing job not found for jobId: %s", jobId);
       PortableDataType dataType = JobUtils.getDataType(job.dataType());
 
-      ServiceMode serviceMode = PortabilityApiUtils.getServiceMode(
+      TransferMode serviceMode = PortabilityApiUtils.getServiceMode(
           job,
           exchange.getRequestHeaders(),
           commonSettings.getEncryptedFlow());
 
       // TODO: Determine service from job or from authUrl path?
       String service =
-          serviceMode == ServiceMode.EXPORT ? job.exportService() : job.importService();
+          serviceMode == TransferMode.EXPORT ? job.exportService() : job.importService();
       Preconditions.checkState(!Strings.isNullOrEmpty(service),
           "service not found, service: %s serviceMode: %s, jobId: %s", service, serviceMode, jobId);
 
@@ -162,7 +162,7 @@ final class Oauth2CallbackHandler implements HttpHandler {
       }
 
       redirect =
-          PortabilityApiFlags.baseUrl() + ((serviceMode == ServiceMode.EXPORT)
+          PortabilityApiFlags.baseUrl() + ((serviceMode == TransferMode.EXPORT)
               ? FrontendConstantUrls.next : FrontendConstantUrls.copy);
     } catch (Exception e) {
       logger.error("Error handling request: {}", e);

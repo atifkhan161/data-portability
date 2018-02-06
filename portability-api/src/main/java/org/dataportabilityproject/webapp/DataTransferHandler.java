@@ -32,7 +32,7 @@ import org.dataportabilityproject.cloud.interfaces.CloudFactory;
 import org.dataportabilityproject.job.JobUtils;
 import org.dataportabilityproject.job.PortabilityJobFactory;
 import org.dataportabilityproject.shared.PortableDataType;
-import org.dataportabilityproject.shared.ServiceMode;
+import org.dataportabilityproject.spi.transfer.TransferMode;
 import org.dataportabilityproject.shared.auth.AuthFlowInitiator;
 import org.dataportabilityproject.shared.auth.OnlineAuthDataGenerator;
 import org.dataportabilityproject.shared.settings.CommonSettings;
@@ -110,11 +110,11 @@ final class DataTransferHandler implements HttpHandler {
       PortableDataType dataType = JobUtils.getDataType(dataTypeStr);
 
       String exportService = request.getSource();
-      Preconditions.checkArgument(JobUtils.isValidService(exportService, ServiceMode.EXPORT),
+      Preconditions.checkArgument(JobUtils.isValidService(exportService, TransferMode.EXPORT),
           "Missing valid exportService: %s", exportService);
 
       String importService = request.getDestination();
-      Preconditions.checkArgument(JobUtils.isValidService(importService, ServiceMode.IMPORT),
+      Preconditions.checkArgument(JobUtils.isValidService(importService, TransferMode.IMPORT),
           "Missing valid importService: %s", importService);
 
       // Create a new job and persist
@@ -135,7 +135,7 @@ final class DataTransferHandler implements HttpHandler {
 
       // Obtain the OnlineAuthDataGenerator for export service
       OnlineAuthDataGenerator generator = serviceProviderRegistry
-          .getOnlineAuth(job.exportService(), dataType, ServiceMode.EXPORT);
+          .getOnlineAuth(job.exportService(), dataType, TransferMode.EXPORT);
       Preconditions.checkNotNull(generator, "Generator not found for type: %s, service: %s",
           dataType, job.exportService());
 
@@ -150,7 +150,7 @@ final class DataTransferHandler implements HttpHandler {
       // is done in the SetupHandler in IMPORT mode
       if (authFlowInitiator.initialAuthData() != null) {
         job = JobUtils.setInitialAuthData(job, authFlowInitiator.initialAuthData(),
-            ServiceMode.EXPORT);
+            TransferMode.EXPORT);
         JobState expectedPreviousState =
             commonSettings.getEncryptedFlow() ? JobState.PENDING_AUTH_DATA : null;
         store.update(job, expectedPreviousState);

@@ -15,6 +15,7 @@
  */
 package org.dataportabilityproject.gateway.action;
 
+import java.util.UUID;
 import org.dataportabilityproject.gateway.action.Action;
 
 // import static org.apache.axis.transport.http.HTTPConstants.HEADER_CONTENT_TYPE;
@@ -35,12 +36,13 @@ import java.io.IOException;
 
 
 import java.nio.charset.StandardCharsets;
+import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob;
+import org.dataportabilityproject.spi.cloud.types.PortabilityJob;
 
 /*
 import org.dataportabilityproject.ServiceProviderRegistry;
 import org.dataportabilityproject.job.JobDao;
 import org.dataportabilityproject.job.JobUtils;
-import org.dataportabilityproject.job.PortabilityJob;
 import org.dataportabilityproject.job.PortabilityJobFactory;
 import org.dataportabilityproject.shared.PortableDataType;
 import org.dataportabilityproject.shared.ServiceMode;
@@ -57,7 +59,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An {@link Action} that handles the data transfer request submission.
  */
-final class DataTransferAction implements Action<DataTransferRequest, DataTransferResponse> {
+public final class DataTransferAction implements Action<DataTransferRequest, DataTransferResponse> {
 
   private static final Logger logger = LoggerFactory.getLogger(
       DataTransferAction.class);
@@ -67,6 +69,7 @@ final class DataTransferAction implements Action<DataTransferRequest, DataTransf
   //private final PortabilityJobFactory jobFactory;
   //private final CommonSettings commonSettings;
   private final ObjectMapper objectMapper;
+  private final IdProvider idProvider
 
   @Inject
   DataTransferAction(
@@ -82,64 +85,33 @@ final class DataTransferAction implements Action<DataTransferRequest, DataTransf
     this.objectMapper = new ObjectMapper();
   }
 
-
-  @Override
-  public String getPath() {
-    return "/_/DataTransfer";
-  }
-
+  /**
+   * Given a set of job configuration parameters, this will create a new job and kick off auth flows
+   * for the specified configuration. TODO: Determine what to do if previous job exists in the
+   * session instead of creating a new job every time. TODO: Preconditions doesn't return an error
+   * code or page. So if a page is requested with invalid params or incorrect method, no error is
+   * present and the response is empty.
+   */
   @Override
   public DataTransferResponse handle(DataTransferRequest request) {
-    return null;
-  }
-
-  /**
-     * Given a set of job configuration parameters, this will create a new job and kick off auth flows
-     * for the specified configuration. TODO: Determine what to do if previous job exists in the
-     * session instead of creating a new job every time. TODO: Preconditions doesn't return an error
-     * code or page. So if a page is requested with invalid params or incorrect method, no error is
-     * present and the response is empty.
-     * /
-  public void handle(HttpExchange exchange) throws IOException {
-    Preconditions.checkArgument(
-        PortabilityApiUtils.validateRequest(exchange, HttpMethods.POST, PATH),
-        PATH + " only supports POST.");
-    logger.debug("received request: {}", exchange.getRequestURI());
-
-    DataTransferResponse dataTransferResponse = handleExchange(exchange);
-    logger.debug("redirecting to: {}", dataTransferResponse.getNextUrl());
-
-    // Mark the response as type Json and send
-    exchange.getResponseHeaders()
-        .set(HEADER_CONTENT_TYPE, "application/json; charset=" + StandardCharsets.UTF_8.name());
-    exchange.sendResponseHeaders(200, 0);
-    objectMapper.writeValue(exchange.getResponseBody(), dataTransferResponse);
-  }
-
-
-  DataTransferResponse handleExchange(HttpExchange exchange) throws IOException {
-    String redirect = "/error";
-    DataTransferRequest request = objectMapper
-        .readValue(exchange.getRequestBody(), DataTransferRequest.class);
 
     try {
       String dataTypeStr = request.getTransferDataType();
       Preconditions.checkArgument(!Strings.isNullOrEmpty(dataTypeStr),
           "Missing valid dataTypeParam: %s", dataTypeStr);
 
-      PortableDataType dataType = JobUtils.getDataType(dataTypeStr);
-
       String exportService = request.getSource();
-      Preconditions.checkArgument(JobUtils.isValidService(exportService, ServiceMode.EXPORT),
+      Preconditions.checkArgument(ActionUtils.isValidExportService(exportService),
           "Missing valid exportService: %s", exportService);
 
       String importService = request.getDestination();
-      Preconditions.checkArgument(JobUtils.isValidService(importService, ServiceMode.IMPORT),
+      Preconditions.checkArgument(ActionUtils.isValidImportService(importService),
           "Missing valid importService: %s", importService);
 
       // Create a new job and persist
       PortabilityJob newJob = createJob(dataType, exportService, importService);
 
+      /*
       // Set new cookie
       HttpCookie cookie = new HttpCookie(JsonKeys.ID_COOKIE_KEY, JobUtils.encodeId(newJob));
       exchange.getResponseHeaders()
@@ -188,25 +160,30 @@ final class DataTransferAction implements Action<DataTransferRequest, DataTransf
       throw e;
     }
 
+    */
+
     return new DataTransferResponse(request.getSource(), request.getDestination(),
         request.getTransferDataType(),
-        Status.INPROCESS, redirect); // to the auth url for the export service
-  }
+        Status.INPROCESS, "" /* redirect */); // to the auth url for the export service
+  }}
 
-  /**
-   * Create the initial job in initial state and persist in storage.
-   * /
-  private PortabilityJob createJob(PortableDataType dataType, String exportService,
-      String importService)
-      throws IOException {
-    PortabilityJob job = jobFactory.create(dataType, exportService, importService);
-    if (commonSettings.getEncryptedFlow()) {
-      // This is the initial population of the row in storage
-      jobDao.insertJobInPendingAuthDataState(job);
-    } else {
-      jobDao.insertJob(job);
-    }
-    return job;
+
+  /** Creates the initial data entry to persist. */
+  private static PortabilityJob createInitialJob(String id, String sessionKey,
+      String dataType, String exportService, String importService) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(sessionKey), "sessionKey missing");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id missing");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(exportService), "exportService missing");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(importService), "importService missing");
+    Preconditions.checkNotNull(dataType, "dataType missing");
+    String newId = UUID.randomUUID().toString();
+    String encodedSessionKey = SecretKeyGenerator.generateKeyAndEncode();
+    return PortabilityJob.builder()
+        .setId(id)
+        .setDataType(dataType)
+        .setExportService(exportService)
+        .setImportService(importService)
+        .setSessionKey(sessionKey)
+        .build();
   }
-     */
 }

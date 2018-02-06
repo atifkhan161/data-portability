@@ -18,8 +18,7 @@ package org.dataportabilityproject.gateway;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import java.lang.Thread.UncaughtExceptionHandler;
-import org.dataportabilityproject.gateway.reference.ApiModule;
-import org.dataportabilityproject.gateway.reference.ApiServer;
+import org.dataportabilityproject.gateway.reference.ReferenceApiModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +39,13 @@ public class ApiMain {
         logger.warn("Uncaught exception in thread: {}", thread.getName(), t);
       }
     });
-    PortabilityApiFlags.parse();
+    ApiFlags.parse();
 
     // TODO: Support other server implementations
-    Injector injector = Guice.createInjector(new ApiModule());
-    ApiServer apiServer = injector.getInstance(ApiServer.class);
-    apiServer.start();
+    Injector injector = Guice.createInjector(new ReferenceApiModule());
+
+    // Launch the application
+    Launcher launcher = injector.getInstance(Launcher.class);
+    launcher.start();
   }
 }

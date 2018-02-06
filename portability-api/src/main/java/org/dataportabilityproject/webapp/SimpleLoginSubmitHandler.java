@@ -29,7 +29,7 @@ import org.dataportabilityproject.ServiceProviderRegistry;
 import org.dataportabilityproject.cloud.interfaces.CloudFactory;
 import org.dataportabilityproject.job.JobUtils;
 import org.dataportabilityproject.shared.PortableDataType;
-import org.dataportabilityproject.shared.ServiceMode;
+import org.dataportabilityproject.spi.transfer.TransferMode;
 import org.dataportabilityproject.spi.cloud.storage.JobStore;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob.JobState;
@@ -101,11 +101,11 @@ final class SimpleLoginSubmitHandler implements HttpHandler {
           ? store.find(jobId, JobState.PENDING_AUTH_DATA) : store.find(jobId);
       Preconditions.checkNotNull(job, "existing job not found for jobId: %s", jobId);
 
-      ServiceMode serviceMode = PortabilityApiUtils.getServiceMode(
+      TransferMode serviceMode = PortabilityApiUtils.getServiceMode(
           job, exchange.getRequestHeaders(), commonSettings.getEncryptedFlow());
 
       String service =
-          (serviceMode == ServiceMode.EXPORT) ? job.exportService() : job.importService();
+          (serviceMode == TransferMode.EXPORT) ? job.exportService() : job.importService();
       Preconditions.checkState(!Strings.isNullOrEmpty(service),
           "service not found, service: %s serviceMode: %s, job id: %s", service, serviceMode,
           jobId);
@@ -139,7 +139,7 @@ final class SimpleLoginSubmitHandler implements HttpHandler {
       }
 
       response = new DataTransferResponse(job.exportService(), job.importService(), job.dataType(), Status.INPROCESS,
-          PortabilityApiFlags.baseUrl() + (serviceMode == ServiceMode.EXPORT
+          PortabilityApiFlags.baseUrl() + (serviceMode == TransferMode.EXPORT
               ? FrontendConstantUrls.next : FrontendConstantUrls.copy));
 
     } catch (Exception e) {

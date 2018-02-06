@@ -28,13 +28,13 @@ import org.slf4j.LoggerFactory;
 /**
  * A class that contains all flags exlusive to the API server.
  */
-public class PortabilityApiFlags {
-  private static final Logger logger = LoggerFactory.getLogger(PortabilityApiFlags.class);
+public class ApiFlags {
+  private static final Logger logger = LoggerFactory.getLogger(ApiFlags.class);
 
-  private static PortabilityApiFlags INSTANCE = null;
+  private static ApiFlags INSTANCE = null;
   private final ApiSettings apiSettings;
 
-  private PortabilityApiFlags(ApiSettings apiSettings) {
+  private ApiFlags(ApiSettings apiSettings) {
     this.apiSettings = apiSettings;
   }
 
@@ -49,9 +49,9 @@ public class PortabilityApiFlags {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     try {
       InputStream in =
-          PortabilityApiFlags.class.getClassLoader().getResourceAsStream("settings/api.yaml");
+          ApiFlags.class.getClassLoader().getResourceAsStream("settings/api.yaml");
       ApiSettings apiSettings = mapper.readValue(in, ApiSettings.class);
-      INSTANCE = new PortabilityApiFlags(apiSettings);
+      INSTANCE = new ApiFlags(apiSettings);
       logger.debug("Parsed flags: {}", apiSettings);
     } catch (IOException e) {
       throw new IllegalArgumentException("Problem parsing api settings", e);

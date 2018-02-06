@@ -28,7 +28,7 @@ import org.dataportabilityproject.cloud.interfaces.CloudFactory;
 import org.dataportabilityproject.job.Crypter;
 import org.dataportabilityproject.job.CrypterFactory;
 import org.dataportabilityproject.job.SecretKeyGenerator;
-import org.dataportabilityproject.shared.ServiceMode;
+import org.dataportabilityproject.spi.transfer.TransferMode;
 import org.dataportabilityproject.spi.cloud.storage.JobStore;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob;
 import org.dataportabilityproject.spi.cloud.types.LegacyPortabilityJob.JobState;
@@ -67,11 +67,11 @@ class CryptoHelper {
    * Encrypts the given {@code authData} with the session-based {@link SecretKey} and stores it as a
    * cookie in the provided headers.
    */
-  void encryptAndSetCookie(Headers headers, String jobId, ServiceMode serviceMode,
+  void encryptAndSetCookie(Headers headers, String jobId, TransferMode serviceMode,
       AuthData authData) {
     SecretKey sessionKey = getSessionKey(jobId);
     String encrypted = encrypt(sessionKey, authData);
-    String cookieKey = (serviceMode == ServiceMode.EXPORT)
+    String cookieKey = (serviceMode == TransferMode.EXPORT)
         ? JsonKeys.EXPORT_AUTH_DATA_COOKIE_KEY
         : JsonKeys.IMPORT_AUTH_DATA_COOKIE_KEY;
     HttpCookie cookie = new HttpCookie(cookieKey, encrypted);

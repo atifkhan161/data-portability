@@ -20,9 +20,6 @@ package org.dataportabilityproject.gateway.action;
  */
 public interface Action<Request, Response> {
 
-  /** The path handled by this action. */
-  String getPath();
-
   /** Handles the given {@code Request} and returns a {@code Response}. */
   Response handle(Request request);
 }
